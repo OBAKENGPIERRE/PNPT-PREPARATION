@@ -452,5 +452,24 @@ No users, groups, computers or directory objects were exposed without authentica
 
 ---
 
+## Step 6 – Kerberos User Enumeration
+
+### Objective
+
+Identify valid Active Directory usernames without credentials by interacting with the Kerberos service running on the Domain Controller.
+
+### Why
+
+Kerberos responds differently to valid and invalid usernames. This allows attackers to discover domain accounts before attempting authentication attacks.
+
+### Target
+
+192.168.17.10 (DC01)
+
+### Services Identified
+
+- TCP 88 (Kerberos)
+- TCP 389 (LDAP)
+
 **Status:** Phase 2 Enumeration In Progress
 
