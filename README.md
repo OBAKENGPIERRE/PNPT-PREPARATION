@@ -471,5 +471,16 @@ Kerberos responds differently to valid and invalid usernames. This allows attack
 - TCP 88 (Kerberos)
 - TCP 389 (LDAP)
 
+
+### Tool: Kerbrute v1.0.3
+
+### Command
+kerbrute userenum --dc 192.168.17.10 -d corp.local ~/users.txt
+
+### Valid Users Discovered
+- it.admin@corp.local
+- helpdesk@corp.local
+- administrator@corp.local
+
 **Status:** Phase 2 Enumeration In Progress
 
