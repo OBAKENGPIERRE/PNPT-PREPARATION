@@ -482,5 +482,7 @@ kerbrute userenum --dc 192.168.17.10 -d corp.local ~/users.txt
 - helpdesk@corp.local
 - administrator@corp.local
 
+- ![Kerberos User Enumeration](screenshots/Kerberos User Enumeration.png)
+
 **Status:** Phase 2 Enumeration In Progress
 
