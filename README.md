@@ -403,7 +403,7 @@ No users, groups, computers or directory objects were exposed without authentica
 
 ## Screenshot
 
-![LDAP Enumeration](screenshots/ldap-enumeration.png)
+![LDAP Enumeration](screenshots/Kerberos User Enumeration.png)
 
 ---
 
