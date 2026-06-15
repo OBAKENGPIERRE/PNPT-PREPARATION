@@ -198,3 +198,259 @@ Successfully built a functional Active Directory environment suitable for:
 * SOC detection engineering
 
 Phase 2 will focus on Active Directory enumeration and internal penetration testing techniques from Kali Linux.
+
+
+# PNPT PREP PHASE 2 – ACTIVE DIRECTORY ENUMERATION
+
+## Objective
+
+The objective of this phase was to perform Active Directory enumeration from the perspective of a penetration tester with no direct access to the target systems.
+
+All discovery was performed from the Kali attack machine.
+
+---
+
+# Network Architecture
+
+| Host         | IP Address       | Role                       |
+| ------------ | ---------------- | -------------------------- |
+| Kali Linux   | Attacker Machine | Enumeration & Exploitation |
+| DC01         | 192.168.17.10    | Domain Controller          |
+| WIN11-CLIENT | 192.168.17.20    | Domain Workstation         |
+| WAZUH-SERVER | 192.168.17.30    | SIEM / Monitoring Server   |
+
+---
+
+# Step 1 – Host Discovery
+
+## Command
+
+```bash
+sudo nmap -sn 192.168.17.0/24
+```
+
+## Purpose
+
+Identify live hosts on the target subnet before performing deeper enumeration.
+
+## Findings
+
+| IP Address     | Observation           |
+| -------------- | --------------------- |
+| 192.168.17.10  | Domain Controller     |
+| 192.168.17.20  | Windows Workstation   |
+| 192.168.17.30  | Wazuh Server          |
+| 192.168.17.102 | Wazuh Secondary NIC   |
+| 192.168.17.1   | VMware Network Device |
+| 192.168.17.254 | VMware Gateway/DHCP   |
+
+## Screenshot
+
+![Host Discovery](screenshots/host-discovery.png)
+
+---
+
+# Step 2 – Service Enumeration
+
+## Command
+
+```bash
+sudo nmap -Pn -sV 192.168.17.0/24
+```
+
+## Purpose
+
+Identify open ports and services running on discovered hosts.
+
+## Findings
+
+### DC01 (192.168.17.10)
+
+| Port | Service                  |
+| ---- | ------------------------ |
+| 53   | DNS                      |
+| 88   | Kerberos                 |
+| 135  | RPC                      |
+| 139  | NetBIOS                  |
+| 389  | LDAP                     |
+| 445  | SMB                      |
+| 464  | Kerberos Password Change |
+| 593  | RPC over HTTP            |
+| 3268 | Global Catalog           |
+| 5985 | WinRM                    |
+
+### Additional Information Discovered
+
+```text
+Hostname: DC01
+Domain: corp.local
+Operating System: Windows Server 2025
+```
+
+## Analysis
+
+The presence of DNS, Kerberos, LDAP, SMB and Global Catalog services strongly indicates that the host is functioning as an Active Directory Domain Controller.
+
+## Screenshot
+
+![Service Enumeration](screenshots/service-enumeration.png)
+
+---
+
+# Step 3 – SMB Enumeration
+
+## Command
+
+```bash
+netexec smb 192.168.17.10
+```
+
+## Purpose
+
+Gather information about SMB configuration and identify potential attack paths.
+
+## Findings
+
+```text
+Hostname: DC01
+Domain: corp.local
+SMB Signing: Enabled
+SMBv1: Disabled
+Null Authentication: True
+```
+
+## Analysis
+
+SMB signing is enabled, reducing the likelihood of successful SMB relay attacks.
+
+SMBv1 is disabled, removing exposure to legacy SMB vulnerabilities.
+
+Null authentication was possible, indicating that anonymous sessions can be established, although no useful resources were exposed.
+
+## Screenshot
+
+![SMB Enumeration](screenshots/smb-enumeration.png)
+
+---
+
+# Step 4 – Anonymous Share Enumeration
+
+## Command
+
+```bash
+netexec smb 192.168.17.10 --shares
+```
+
+## Findings
+
+```text
+STATUS_USER_SESSION_DELETED
+```
+
+### Additional Testing
+
+```bash
+smbclient -L //192.168.17.10/ -N
+```
+
+## Findings
+
+```text
+Anonymous login successful
+```
+
+No shares were returned.
+
+## Analysis
+
+Anonymous SMB connections are allowed, however share enumeration is restricted.
+
+No accessible shares were identified without credentials.
+
+## Screenshot
+
+![Anonymous SMB Enumeration](screenshots/anonymous-smb.png)
+
+---
+
+# Step 5 – LDAP Enumeration
+
+## Command
+
+```bash
+netexec ldap 192.168.17.10
+```
+
+## Purpose
+
+Gather Active Directory information through LDAP.
+
+## Findings
+
+```text
+Hostname: DC01
+Domain: corp.local
+LDAP Signing: Enforced
+```
+
+## Analysis
+
+LDAP signing is enforced.
+
+Anonymous LDAP enumeration appears to be restricted.
+
+No users, groups, computers or directory objects were exposed without authentication.
+
+## Screenshot
+
+![LDAP Enumeration](screenshots/ldap-enumeration.png)
+
+---
+
+# Information Discovered So Far
+
+## Domain Information
+
+| Item                 | Value         |
+| -------------------- | ------------- |
+| Domain Name          | corp.local    |
+| Domain Controller    | DC01          |
+| Domain Controller IP | 192.168.17.10 |
+
+---
+
+## Security Controls Identified
+
+| Control                    | Status   |
+| -------------------------- | -------- |
+| SMB Signing                | Enabled  |
+| SMBv1                      | Disabled |
+| LDAP Signing               | Enforced |
+| Anonymous SMB Shares       | Blocked  |
+| Anonymous LDAP Enumeration | Blocked  |
+
+---
+
+# Lessons Learned
+
+* Active Directory services can be identified through open ports alone.
+* Kerberos, LDAP and Global Catalog services are strong indicators of a Domain Controller.
+* SMB signing significantly reduces relay attack opportunities.
+* Null sessions do not always provide useful information.
+* Enumeration should always begin with host discovery and service identification before attempting authentication attacks.
+
+---
+
+# Next Steps
+
+* Enumerate LDAP RootDSE
+* Discover domain users
+* Perform Kerberos enumeration
+* Identify valid usernames
+* Explore password spraying opportunities
+* Begin Active Directory attack path analysis
+
+---
+
+**Status:** Phase 2 Enumeration In Progress
+
